@@ -2,7 +2,6 @@ import { BaseDomain } from '../common'
 
 export class Graph extends BaseDomain {
 
-
   constructor (
     /**
      * Left node of graph

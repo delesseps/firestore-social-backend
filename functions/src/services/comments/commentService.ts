@@ -1,22 +1,20 @@
 
 import * as functions from 'firebase-functions'
-import { adminDB, firestoreDB } from '../../data/index'
+import { firestoreDB } from '../../data/index'
 import { Comment } from '../../domain/comments/comment'
-import * as _ from 'lodash'
+import { fromPairs, toPairs } from 'lodash'
 
 /**
  * Add comment
  */
 export const onAddComment = functions.firestore
   .document(`comments/{commentId}`)
-  .onCreate((dataSnapshot, event) => {
+  .onCreate((dataSnapshot: any, event: any) => {
     var newComment = dataSnapshot.data() as Comment
     const commentId: string = event.params.commentId
     if (newComment) {
       const postRef = firestoreDB.doc(`posts/${newComment.postId}`)
 
-      // Get post
-      var postId = newComment.postId
       /**
        * Increase comment counter and create three comments' slide preview
        */
@@ -35,7 +33,7 @@ export const onAddComment = functions.firestore
             } else {
               let sortedObjects = { ...comments, [commentId]: newComment }
               // Sort posts with creation date
-              sortedObjects = _.fromPairs(_.toPairs(sortedObjects)
+              sortedObjects = fromPairs(toPairs(sortedObjects)
                 .sort((a: any, b: any) => parseInt(b[1].creationDate, 10) - parseInt(a[1].creationDate, 10)).slice(0, 3))
 
               transaction.update(postRef, { comments: { ...sortedObjects } })
@@ -44,6 +42,7 @@ export const onAddComment = functions.firestore
         })
       })
     }
+    return undefined
   })
 
 /**
@@ -51,10 +50,9 @@ export const onAddComment = functions.firestore
  */
 export const onDeleteComment = functions.firestore
   .document(`comments/{commentId}`)
-  .onDelete((dataSnapshot, context) => {
+  .onDelete((dataSnapshot: any) => {
     return new Promise((resolve, reject) => {
       const deletedComment = dataSnapshot.data() as Comment
-      const commentId: string = context.params.commentId
       const postId: string = deletedComment.postId
 
       const postRef = firestoreDB.doc(`posts/${postId}`)

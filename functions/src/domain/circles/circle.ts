@@ -1,4 +1,3 @@
-import { UserTie } from './userTie'
 import { BaseDomain } from '../common'
 
 export class Circle extends BaseDomain {

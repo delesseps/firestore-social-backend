@@ -1,6 +1,4 @@
-import { BaseDomain } from "../common/baseDomain";
-
-
+import { BaseDomain } from '../common/baseDomain'
 
 export class UserTie extends BaseDomain {
 

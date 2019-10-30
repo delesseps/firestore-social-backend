@@ -1,6 +1,5 @@
 
 import * as functions from 'firebase-functions'
-import { adminDB, firestoreDB } from '../../data/index'
 import { Feed } from '../../domain/common/feed'
 import { emailAPI } from '../../api/emailAPI'
 import { Email } from '../../domain/common/email'
@@ -10,7 +9,7 @@ const appName = functions.config().setting.appname
 
 export const onCreateFeedback = functions.firestore
 .document(`feeds/{feedId}`)
-.onCreate((dataSnapshot, context) => {
+.onCreate((dataSnapshot: any) => {
   return new Promise<void>((resolve, reject) => {
     const feed: Feed = dataSnapshot.data()
     const from = `${appName} Feedback <${gmailEmail}>`
@@ -36,7 +35,7 @@ export const onCreateFeedback = functions.firestore
       text
     )).then(() => {
       resolve()
-    }).catch((error) => {
+    }).catch(() => {
       reject()
     })
 

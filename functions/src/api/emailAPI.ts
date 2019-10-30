@@ -3,7 +3,9 @@ import { Email } from '../domain/common/email'
 const nodemailer = require('nodemailer')
 
 // Set variable for this project
-// firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"
+// firebase functions:config:set gmail.email="@gmail.com" gmail.password='!'"AZ3961610"
+// firebase functions:config:set gmail.email="@gmail.com" gmail.password='!'"AZ3961610" recaptcha.secretkey="secretKey" phone.sourcenumber="sourceNumber" plivo.authid="authId" plivo.authtoken="authToken" setting.appname="react-social-network-delesseps"
+
 const gmailEmail = functions.config().gmail.email
 const gmailPassword = functions.config().gmail.password
 const mailTransport = nodemailer.createTransport({

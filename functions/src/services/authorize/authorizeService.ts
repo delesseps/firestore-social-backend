@@ -1,14 +1,11 @@
 import * as functions from 'firebase-functions'
 import { adminDB, firestoreDB } from '../../data/index'
-import { Comment } from '../../domain/comments/comment'
-import * as _ from 'lodash'
 import { Circle } from '../../domain/circles/circle'
-import * as moment from 'moment'
-import * as express from 'express'
+import moment from 'moment'
+import express from 'express'
 import * as bodyParser from 'body-parser'
 import { SocialError } from '../../domain/common/index'
 import { Verification } from '../../domain/authorize/verification'
-import { UserStateType } from '../../domain/authorize/userStateType'
 import { HttpStatusCode } from '../../data/httpStatusCode'
 
 const plivo = require('plivo')
@@ -22,7 +19,7 @@ const appName = functions.config().setting.appname
 /**
  * Handle on user create
  */
-export const onUserCreate = functions.auth.user().onCreate((change, context) => {
+export const onUserCreate = functions.auth.user().onCreate((change: any) => {
     return new Promise<void>((resolve, reject) => {
         const user = change
         const followingCircle = new Circle()
@@ -31,7 +28,7 @@ export const onUserCreate = functions.auth.user().onCreate((change, context) => 
         followingCircle.ownerId = user.uid
         followingCircle.isSystem = true
         return firestoreDB.collection(`users`).doc(user.uid).collection(`circles`).add({ ...followingCircle })
-            .then((result) => {
+            .then(() => {
                 resolve()
             }).catch(reject)
 
@@ -109,7 +106,7 @@ app.post('/api/sms-verification', async (req, res) => {
         console.log('Captha/responseSuccess')
         const client = new plivo.Client(functions.config().plivo.authid, functions.config().plivo.authtoken)        
         client.messages.create(sourcePhoneNumber,targetPhoneNumber,phoneMessage.replace('<CODE>', String(code)))
-        .then((messageCreated: any) => {
+        .then(() => {
             const verifyRef = firestoreDB.collection('verification').doc(userId).collection('phone')
             .doc()
             const phoneVerification = new Verification(
@@ -124,6 +121,7 @@ app.post('/api/sms-verification', async (req, res) => {
             return res.status(HttpStatusCode.OK).json({ 'verifyId': verifyRef.id })
         })
     })
+    return undefined
 })
 
 /**
@@ -199,7 +197,6 @@ app.post('/api/verify-phone', async (req, res) => {
  * Register user
  */
 app.post('/api/register', async (req, res) => {
-    const remoteIpAddress = req.connection.remoteAddress
     const userName = req.body['userName']
     const password = req.body['password']
     const email = req.body['email']
@@ -217,7 +214,7 @@ app.post('/api/register', async (req, res) => {
           email
         }
       ).then(() => {
-        bcrypt.hash(password, saltRounds, function(error: any, hash: any) {
+        bcrypt.hash(password, saltRounds, (error: any, hash: any) => {
             // Store hash in your password DB.
             firestoreDB.collection('protectedUser').doc(userId)
             .set({
@@ -226,11 +223,11 @@ app.post('/api/register', async (req, res) => {
                 phoneVerified: false
             }).then(() => {
                 return res.status(HttpStatusCode.OK).json({})
-            }).catch((error: any) => {
+            }).catch(() => {
                 res.status(HttpStatusCode.InternalServerError).send(new SocialError('ServerError/NotStoreProtectedUser', 'Can not store protected user!'))
             })
           })
-      }).catch((error: any) => {
+      }).catch(() => {
         res.status(HttpStatusCode.InternalServerError).send(new SocialError('ServerError/NotStoreUserInfo', 'Can not store user info!'))
     })
 })
@@ -239,7 +236,6 @@ app.post('/api/register', async (req, res) => {
  * Register user
  */
 app.post('/api/update-password', async (req, res) => {
-    const remoteIpAddress = req.connection.remoteAddress
     const newPassword = req.body['newPassword'] as string
     const confirmPassword = req.body['confirmPassword'] as string
     const userId = (req as any).user.uid as string
@@ -250,8 +246,8 @@ app.post('/api/update-password', async (req, res) => {
 
         adminDB.auth().updateUser(userId, {
             password: newPassword
-        }).then((updateResult) => {
-            bcrypt.hash(newPassword, saltRounds, function(error: any, hash: any) {
+        }).then(() => {
+            bcrypt.hash(newPassword, saltRounds, (error: any, hash: any) => {
                 // Store hash in your password DB.
                 firestoreDB.collection('protectedUser').doc(userId)
                 .update({

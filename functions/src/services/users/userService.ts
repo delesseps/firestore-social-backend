@@ -1,12 +1,11 @@
 
 import * as functions from 'firebase-functions'
-import { adminDB, firestoreDB } from '../../data/index'
+import { firestoreDB } from '../../data/index'
 import { Comment } from '../../domain/comments/comment'
-import * as express from 'express'
+import express from 'express'
 import { User } from '../../domain/users/user'
 import { HttpStatusCode } from '../../data/httpStatusCode'
 import { SocialError } from '../../domain/common/index'
-import { Profile } from '../../domain/users/profile'
 import { Post } from '../../domain/posts/post'
 import { UserTie } from '../../domain/circles/index'
 import { Graph } from '../../domain/graphs/index'
@@ -47,20 +46,21 @@ app.post('/', async (request, response) => {
     const userIdList = JSON.parse(request.body)
     if (userIdList && Array.isArray(userIdList) && userIdList.length > 0) {
         getUserByListId(userIdList)
-        .then((users) => {
-            response.status(HttpStatusCode.OK).send(users)
-        })
-
+          .then((users) => {
+            return response.status(HttpStatusCode.OK).send(users)
+          })
     } else {
         // Send baack bad request happened
         return response.status(HttpStatusCode.BadRequest)
-        .send(new SocialError('UserService/UserIdListNotValid',
-        `
-        User list is undefined or not array or the length of array is not grater than zero!
-        ${JSON.stringify(userIdList)}
-        `))
+          .send(
+            new SocialError('UserService/UserIdListNotValid',
+            `
+            User list is undefined or not array or the length of array is not grater than zero!
+            ${JSON.stringify(userIdList)}
+            `),
+          )
     }
-
+    return undefined
 })
 
 /**
@@ -72,7 +72,7 @@ export const users =  functions.https.onRequest(app)
  * Handle on update user information
  */
 export const onUpdateUserInfo = functions.firestore.document('userInfo/{userId}')
-.onUpdate((dataSnapshot, context) => {
+.onUpdate((dataSnapshot: any, context: any) => {
     return new Promise<void>((resolve, reject) => {
         const userId: string = context.params.userId
         const previousUserInfo = dataSnapshot.before.data() as User

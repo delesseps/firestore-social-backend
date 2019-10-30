@@ -1,12 +1,10 @@
 import * as functions from 'firebase-functions'
 import { adminDB, firestoreDB } from '../../data/index'
-import * as _ from 'lodash'
-import * as moment from 'moment'
-import * as express from 'express'
+import moment from 'moment'
+import express from 'express'
 import * as bodyParser from 'body-parser'
 import { SocialError } from '../../domain/common/index'
 import { Verification } from '../../domain/authorize/verification'
-import { UserStateType } from '../../domain/authorize/userStateType'
 import { emailAPI } from '../../api/emailAPI'
 import { Email } from '../../domain/common/email'
 import { Profile } from '../../domain/users/index'
@@ -30,12 +28,11 @@ const appName = functions.config().setting.appname
  * Login user API
  */
 app.post('/api/login', async (req, res) => {
-    const remoteIpAddress = req.connection.remoteAddress
     const userName = req.body['userName']
     const password = req.body['password']
     console.log(userName, password)
     firestoreDB.collection('protectedUser').where('userName', '==', userName)
-        .get().then((result) => {
+        .get().then((result: any) => {
             console.log('result', result.size, result.empty)
             if (result && !result.empty && result.size === 1) {
                 const doc = result.docs[0]
@@ -60,11 +57,13 @@ app.post('/api/login', async (req, res) => {
                     } else {
                         return res.status(HttpStatusCode.InternalServerError).send(new SocialError('ServerError/WrongPassword', 'Password is wrong!'))
                     }
+                    return undefined
                 })
 
             } else {
                 return res.status(HttpStatusCode.InternalServerError).send(new SocialError('ServerError/WrongUserName', 'User name is wrong!'))
             }
+            return undefined
         })
         .catch((error) => {
             return res.status(HttpStatusCode.InternalServerError).send(new SocialError('ServerError/FirestoreGetData', error))
@@ -80,7 +79,7 @@ app.post('/api/verify-email', async (req, res) => {
     const verifyId = req.body['verifyId']
     const targetEmail = req.body['email']
     firestoreDB.collection('userInfo').where('email', '==', targetEmail)
-        .get().then((userInfo) => {
+        .get().then((userInfo: any) => {
                 console.log('userInfo', userInfo.size, userInfo.empty)
                 if (userInfo && !userInfo.empty && userInfo.size === 1) {
                     const doc = userInfo.docs[0]
@@ -146,8 +145,9 @@ app.post('/api/verify-email', async (req, res) => {
             } else {
                 res.status(HttpStatusCode.NotFound).send(new SocialError('ServerError/EmailNotFound', 'Email not found!'))
             }
+            return undefined
         })
-        .catch((error) => {
+        .catch(() => {
             res.status(HttpStatusCode.NotFound).send(new SocialError('ServerError/EmailNotFound', 'Email not found!'))
         })
 
@@ -166,7 +166,7 @@ app.post('/api/email-verification-code', async (req, res) => {
     const to = targetEmail
     const subject = `Reset your password for ${appName}`
     firestoreDB.collection('userInfo').where('email', '==', targetEmail)
-        .get().then((userInfoList) => {
+        .get().then((userInfoList: any) => {
 
             if (userInfoList.size === 1) {
                 const user = userInfoList.docs[0].data() as Profile
@@ -209,7 +209,7 @@ app.post('/api/email-verification-code', async (req, res) => {
                         to,
                         subject,
                         html
-                    )).then(function (messageCreated: any) {
+                    )).then(() => {
                         const verifyRef = firestoreDB.collection('verification').doc(userId).collection('resetPassword')
                             .doc()
                         const resetPasswordVerification = new Verification(
@@ -222,16 +222,17 @@ app.post('/api/email-verification-code', async (req, res) => {
                         )
                         verifyRef.set({ ...resetPasswordVerification })
                         return res.status(HttpStatusCode.OK).json({ 'verifyId': verifyRef.id })
-                    }).catch((error) => {
+                    }).catch(() => {
                         res.status(HttpStatusCode.ServiceUnavailable).send(new SocialError('ServerError/EmailNotSent', 'Email service error. Email has not sent!'))
                     })
-
+                    return undefined
                 })
             } else {
                 res.status(HttpStatusCode.NotFound).send(new SocialError('ServerError/EmailNotFound', 'Email not found!'))
             }
+            return undefined
         })
-        .catch((error) => {
+        .catch(() => {
             res.status(HttpStatusCode.NotFound).send(new SocialError('ServerError/EmailNotFound', 'With DB error. Email not found!'))
         })
 

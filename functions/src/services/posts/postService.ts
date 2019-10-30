@@ -1,8 +1,6 @@
 
 import * as functions from 'firebase-functions'
-import { adminDB, firestoreDB } from '../../data/index'
-import { Comment } from '../../domain/comments/comment'
-import * as express from 'express'
+import express from 'express'
 
 const app = express()
 app.disable('x-powered-by')
